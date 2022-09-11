@@ -1,24 +1,5 @@
 
 // FOSSA WITH ACCESS-POINT
-
-//========================================================//
-//============EDIT IF USING DIFFERENT HARDWARE============//
-//========================================================//
-
-bool format = false; // true for formatting FOSSA memory, use once, then make false and reflash
-
-#define BTN1 39 //Screen tap button
-
-#define RX1 32 //Bill acceptor
-#define TX1 33 //Bill acceptor
-
-#define TX2 4 //Coinmech
-#define INHIBITMECH 2 //Coinmech
-
-//========================================================//
-//========================================================//
-//========================================================//
-
 #include <WiFi.h>
 #include <WebServer.h>
 #include <FS.h>
@@ -38,15 +19,64 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include <Hash.h>
 #include "qrcoded.h"
 #include "Bitcoin.h"
+//========================================================//
+//============EDIT IF USING DIFFERENT HARDWARE============//
+//========================================================//
+
+//FORMATTING
+bool format = false; // true for formatting FOSSA memory, use once, then make false and reflash
+
+//SCREEN SETTINGS--
+bool screenSizeBool = true; //true or false 2.8 or 3.5 inch respectively
+
+
+//BUTTON SETTINGS--
+bool useTouch = false; //Set to true to use touch screen tap, false for physical button.
+#define buttonPin 22 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (works on pin 22 for ESP32-2432S028R
+
+
+//LANGUAGE SETTINGS--
+bool nativeLang = true; //set to true to set language to your countries native language. i.e. NOT English
+
+//Populate the translated strings of your native language here:
+String lau = "lansio porth"; //"Launch portal"
+String por = "Lansio'r porth."; //"Portal launched."
+String res = "Ailddechrau/lansio porth!"; //"Restart/launch portal!"
+String sta = "Dechrau Derbynydd(au)"; //"Starting Acceptor(s)"
+String wak = "Deffro."; //"Waking up."
+String ent = "wedi'i gofrestru."; //"entered."
+String ver = "Fersiwn"; //"Version"
+String buy = "PRYNU"; //"BUY"
+String her = "YMA"; //"HERE"
+String ins = "Mewnosod nodiadau/darnau arian."; //"Insert notes/coins."
+String exi = "PWYSWCH BOTWM I YMADAEL."; //"PRESS BUTTON TO EXIT."
+String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
+
+//ACCEPTOR SETTINGS--
+
+#define RX1 1 //define the GPIO connected TO the TX of the bill acceptor
+#define TX1 3 //define the GPIO connected TO the RX of the bill acceptor
+
+#define TX2 34 //Coinmech 35
+#define INHIBITMECH 23 //Coinmech 22
+
+//PERSONALISATION SETTINGS--
+String logoName = "FOSSA"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
+String releaseVersion = "GRIFF Edition 0.1"; //set the version of the release here.
+
+//========================================================//
+//========================================================//
+//========================================================//
 
 #define PARAM_FILE "/elements.json"
 
 String qrData;
 String password;
-String apPassword = "ToTheMoon1"; //default WiFi AP password
+String apPassword = "admin"; //default WiFi AP password
 String baseURLATM;
 String secretATM;
 String currencyATM = "";
+String buttonPress;
 
 int bills;
 float coins;
@@ -57,6 +87,8 @@ int charge;
 bool billBool = true;
 bool coinBool = true;
 
+int tftW;
+int tftH;
 int moneyTimer = 0;
 
 // Coin and Bill Acceptor amounts
@@ -68,7 +100,7 @@ float coinAmountSize = sizeof(coinAmountFloat) / sizeof(float);
 HardwareSerial SerialPort1(1);
 HardwareSerial SerialPort2(2);
 
-Button BTNA(BTN1);
+
 
 /////////////////////////////////////
 ////////////////PORTAL///////////////
@@ -82,20 +114,20 @@ String content = "<h1>ATM Access-point</br>For easy variable setting</h1>";
 static const char PAGE_ELEMENTS[] PROGMEM = R"(
 {
   "uri": "/config",
-  "title": "Access Point Config",
+  "title": "ATM Configuration",
   "menu": true,
   "element": [
     {
       "name": "text",
       "type": "ACText",
-      "value": "AP options",
+      "value": "Access Point Config",
       "style": "font-family:Arial;font-size:16px;font-weight:400;color:#191970;margin-botom:15px;"
     },
     {
       "name": "password",
       "type": "ACInput",
       "label": "Password",
-      "value": "ToTheMoon"
+      "value": "admin"
     },
     {
       "name": "text",
@@ -106,28 +138,28 @@ static const char PAGE_ELEMENTS[] PROGMEM = R"(
     {
       "name": "lnurl",
       "type": "ACInput",
-      "label": "ATM string LNbits LNURLDevices",
+      "label": "ATM string for LNBits",
       "value": ""
     },
     {
       "name": "coinmech",
       "type": "ACInput",
-      "label": "Coin values comma seperated, ie 0.01,0.02,0.05,0.10,0.20,0.50,1",
+      "label": "Coin values: ie 0.01,0.02,0.05,0.10,0.20,0.50,1,2",
       "value": ""
     },
     {
       "name": "billmech",
       "type": "ACInput",
-      "label": "Note values comma seperated, ie 5,10,20",
+      "label": "Note values: ie 5,10,20",
       "value": ""
     },
     {
       "name": "maxamount",
       "type": "ACInput",
-      "label": "Max withdrawable in fiat",
-      "value": "20"
+      "label": "Maximum allowable withdrawl in FIAT",
+      "value": "50"			   
     },
-    {
+	{
       "name": "charge",
       "type": "ACInput",
       "label": "Percentage charge for service",
@@ -195,14 +227,25 @@ AutoConnectConfig config;
 AutoConnectAux elementsAux;
 AutoConnectAux saveAux;
 
+Button BTNA(buttonPin, false);
+
+
+
 /////////////////////////////////////
 ////////////////SETUP////////////////
 /////////////////////////////////////
 
 void setup()  
-{  
-  BTNA.begin();
+{ 
   
+  if (useTouch){
+  buttonPress = "TAP SCREEN";
+  }
+  else {
+  buttonPress = "PRESS BUTTON";
+  }
+  BTNA.begin();
+  setLang();
   tft.init();
   tft.setRotation(1);
   tft.invertDisplay(false);
@@ -214,7 +257,7 @@ void setup()
     BTNA.read();
     if (BTNA.wasReleased()) {
       timer = 5000;
-      triggerAp = true;
+     triggerAp = true;
     }
     timer = timer + 100;
     delay(100);
@@ -273,11 +316,10 @@ void setup()
     const char *maRoot4Char = maRoot4["value"];
     const String maxamountstr = maRoot4Char;
     maxamount = maxamountstr.toInt();
-
-    const JsonObject maRoot5 = doc[5];
+	const JsonObject maRoot5 = doc[5];
     const char *maRoot5Char = maRoot5["value"];
     const String chargestr = maRoot5Char;
-    charge = chargestr.toInt();
+    charge = chargestr.toInt();								  											 									 							   
   }
   else{
     triggerAp = true;
@@ -335,7 +377,7 @@ void setup()
   config.apid = "Device-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   config.psk = password;
   config.menuItems = AC_MENUITEM_CONFIGNEW | AC_MENUITEM_OPENSSIDS | AC_MENUITEM_RESET;
-  config.title = "FOSSA";
+  config.title = "FOSSA";						 
   config.reconnectInterval = 1;
 
   if (triggerAp == true)
@@ -367,11 +409,50 @@ void loop()
   tft.fillScreen(TFT_BLACK);
   moneyTimerFun();
   makeLNURL();
-  qrShowCodeLNURL("SCAN ME. TAP SCREEN WHEN FINISHED");
+  qrShowCodeLNURL("SCAN ME." + buttonPress + exi);
 }
 
+void screenSize() {
+  if (screenSizeBool){
+   tftW = 320;
+   tftH = 240;
+  }
+  else {
+   tftW = 480;
+   tftH = 320;
+  }
+}
+
+void setLang(){
+  if (nativeLang = false){
+  lau = "Launch portal";
+  por = "Portal launched.";
+  res = "Restart/launch portal!";
+  sta = "Starting Acceptor(s)";
+  wak = "Waking up.";
+  ent = "entered.";
+  ver = "Version";
+  buy = "BUY";
+  her = "HERE";
+  ins = "Insert notes/coins.";
+  exi = " TO FINISH.";
+}
+}
 void printMessage(String text1, String text2, String text3, int ftcolor, int bgcolor)
 {
+  if (screenSizeBool){
+  tft.fillScreen(bgcolor);
+  tft.setTextColor(ftcolor, bgcolor);
+  tft.setTextSize(3);
+  tft.setCursor(30, 40);
+  tft.println(text1);
+  tft.setCursor(30, 120);
+  tft.println(text2);
+  tft.setCursor(30, 200);
+  tft.setTextSize(2);
+  tft.println(text3);
+  }
+  else {
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
   tft.setTextSize(5);
@@ -381,39 +462,53 @@ void printMessage(String text1, String text2, String text3, int ftcolor, int bgc
   tft.println(text2);
   tft.setCursor(30, 200);
   tft.setTextSize(3);
-  tft.println(text3);
+  tft.println(text3);					 
+  }
 }
 
 void logo()
 {
-  tft.fillScreen(TFT_BLACK);
+  /*tft.fillScreen(TFT_BLACK);
   tft.setCursor(130, 100);
   tft.setTextSize(10);
   tft.setTextColor(TFT_PURPLE);
-  tft.println("FOSSA");
+  tft.println("logoName");
   tft.setTextColor(TFT_WHITE);
   tft.setCursor(40, 170);
   tft.setTextSize(3);
-  tft.println("Bitcoin Lightning ATM");
-  tft.setCursor(300, 290);
-  tft.setTextSize(2);
-  tft.println("(GRIFF Edition)");
+  tft.println("Bitcoin ATM");
+  tft.setCursor(10, 220);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_PURPLE);*/
+  tft.fillScreen(TFT_WHITE);
+  tft.setCursor(80, 20);
+  tft.setTextSize(6);
+  tft.setTextColor(TFT_ORANGE);
+  tft.println(logoName);
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(30, 120);
+  tft.setTextSize(4);
+  tft.println("Bitcoin ATM");
+  tft.setCursor(10, 220);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_PURPLE);
+  tft.println("Version: " + releaseVersion);
 }
 
 void feedmefiat()
 {
-  tft.setTextColor(TFT_WHITE);
+  /*tft.setTextColor(TFT_WHITE);
   tft.setCursor(60, 40);
   tft.setTextSize(3);
   tft.println("Bitcoin Lightning ATM");
-  tft.setCursor(10, 280);
+  tft.setCursor(120, 280);
   tft.println("(feed me fiat. " + String(charge) + "% charge)");
   tft.setTextSize(10);
   tft.setCursor(160, 80);
   tft.println("SATS");
   tft.setCursor(180, 140);
   tft.println("FOR");
-  tft.setCursor(160, 190);
+  tft.setCursor(160, 200);
   tft.println("FIAT!");
   delay(100);
   tft.setTextColor(TFT_GREEN);
@@ -421,7 +516,7 @@ void feedmefiat()
   tft.println("SATS");
   tft.setCursor(180, 140);
   tft.println("FOR");
-  tft.setCursor(160, 190);
+  tft.setCursor(160, 200);
   tft.println("FIAT!");
   delay(100);
   tft.setTextColor(TFT_BLUE);
@@ -429,7 +524,7 @@ void feedmefiat()
   tft.println("SATS");
   tft.setCursor(180, 140);
   tft.println("FOR");
-  tft.setCursor(160, 190);
+  tft.setCursor(160, 200);
   tft.println("FIAT!");
   delay(100);
   tft.setTextColor(TFT_ORANGE);
@@ -437,9 +532,113 @@ void feedmefiat()
   tft.println("SATS");
   tft.setCursor(180, 140);
   tft.println("FOR");
-  tft.setCursor(160, 190);
+  tft.setCursor(160, 200);
   tft.println("FIAT!");
-  delay(100);
+  delay(100);*/
+  if (nativeLang) { 
+    tft.setTextColor(TFT_WHITE);
+    tft.setCursor(80, 20);
+    tft.setTextSize(3);
+    tft.setTextColor(TFT_ORANGE);
+    tft.println("Bitcoin ATM");
+    //tft.println(ins);
+    tft.setCursor(tftW/32, 220);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE);
+    tft.println("Mewnosod nodiadau/darnau arian.");
+    tft.setTextSize(3);
+    tft.setCursor(130, 80);
+    tft.println("PRYNU");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(140, 160);
+    tft.println("YMA!");
+    delay(300);
+    tft.setTextColor(TFT_GREEN);
+    tft.setCursor(130, 80);
+    tft.println("PRYNU");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(140, 160);
+    tft.println("YMA!");
+    delay(300);
+    tft.setTextColor(TFT_BLUE);
+    tft.setCursor(130, 80);
+    tft.println("PRYNU");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(140, 160);
+    tft.println("YMA!");
+    delay(300);
+    tft.setTextColor(TFT_ORANGE);
+    tft.setCursor(130, 80);
+    tft.println("PRYNU");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(140, 160);
+    tft.println("YMA!");
+    delay(300);
+    tft.setTextColor(TFT_PINK);
+    tft.setCursor(130, 80);
+    tft.println("PRYNU");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(140, 160);
+    tft.println("YMA!");
+    delay(300);
+  }
+  else if (nativeLang == false)
+  {
+    tft.setTextColor(TFT_WHITE);
+    tft.setCursor(80, 20);
+    tft.setTextSize(3);
+    tft.setTextColor(TFT_ORANGE);
+    tft.println("Bitcoin ATM");
+    tft.setCursor(10, 220);
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE);
+    tft.println("Insert notes/coins.");
+    tft.setTextSize(3);
+    tft.setCursor(140, 80);
+    tft.println("BUY");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(130, 160);
+    tft.println("HERE!");
+    delay(300);
+    tft.setTextColor(TFT_GREEN);
+    tft.setCursor(140, 80);
+    tft.println("BUY");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(130, 160);
+    tft.println("HERE!");
+    delay(300);
+    tft.setTextColor(TFT_BLUE);
+    tft.setCursor(140, 80);
+    tft.println("BUY");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(130, 160);
+    tft.println("HERE!");
+    delay(300);
+    tft.setTextColor(TFT_ORANGE);
+    tft.setCursor(140, 80);
+    tft.println("BUY");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(130, 160);
+    tft.println("HERE!");
+    delay(300);
+    tft.setTextColor(TFT_PINK);
+    tft.setCursor(140, 80);
+    tft.println("BUY");
+    tft.setCursor(110, 120);
+    tft.println("BITCOIN");
+    tft.setCursor(130, 160);
+    tft.println("HERE!");
+    delay(300);
+  }
 }
 
 void qrShowCodeLNURL(String message)
@@ -457,11 +656,11 @@ void qrShowCodeLNURL(String message)
     {
       if (qrcode_getModule(&qrcoded, x, y))
       {
-        tft.fillRect(120 + 4 * x, 20 + 4 * y, 4, 4, TFT_BLACK);
+        tft.fillRect(40 + 4 * x, 40 + 4 * y, 4, 4, TFT_BLACK);
       }
       else
       {
-        tft.fillRect(120 + 4 * x, 20 + 4 * y, 4, 4, TFT_WHITE);
+        tft.fillRect(40 + 4 * x, 40 + 4 * y, 4, 4, TFT_WHITE);
       }
     }
   }
@@ -486,6 +685,8 @@ void moneyTimerFun()
   coins = 0;
   bills = 0;
   total = 0;
+  
+					
   while( waitForTap || total == 0){
     if(total == 0){
       feedmefiat();
@@ -493,20 +694,20 @@ void moneyTimerFun()
     if (SerialPort1.available()) {
       int x = SerialPort1.read();
        for (int i = 0; i < billAmountSize; i++){
-         if((i+1) == x){
+         if((i+1) == x){							 
            bills = bills + billAmountInt[i];
            total = (coins + bills);
-           printMessage(billAmountInt[i] + currencyATM, "Total: " + String(total) + currencyATM, "TAP SCREEN WHEN FINISHED", TFT_WHITE, TFT_BLACK);
+           printMessage(billAmountInt[i] + currencyATM, "Total: " + String(total) + currencyATM, buttonPress + exi, TFT_WHITE, TFT_BLACK);					 
          }
        }
     }
     if (SerialPort2.available()) {
       int x = SerialPort2.read();
       for (int i = 0; i < coinAmountSize; i++){
-         if((i+1) == x){
+         if((i+1) == x){							 
            coins = coins + coinAmountFloat[i];
            total = (coins + bills);
-           printMessage(coinAmountFloat[i] + currencyATM, "Total: " + String(total) + currencyATM, "TAP SCREEN WHEN FINISHED", TFT_WHITE, TFT_BLACK);
+           printMessage(coinAmountFloat[i] + currencyATM, "Total: " + String(total) + currencyATM, buttonPress + " TO FINISH", TFT_WHITE, TFT_BLACK);					 
          }
        }
     }
