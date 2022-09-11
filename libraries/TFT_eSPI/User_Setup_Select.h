@@ -21,6 +21,14 @@
 
 //#include <User_Setup.h>           // Default setup is root library folder
 
+//_*_*_*_*_*_*_ATM Versions_*_*_*_*_*_*_*_*
+
+#include <User_Setups/ESP32_2432S028.h>  // Setup file for ESP32_2432S028 integrated ESP32 with 2.8inch screen
+//#include <User_Setups/Setup201_WT32_SC01.h>        // Setup file for ESP32 based WT32_SC01 3.5inch
+
+//_*_*_*_*_*_*_*_*_*_*_*_
+
+
 //#include <User_Setups/Setup1_ILI9341.h>  // Setup file for ESP8266 configured for my ILI9341
 //#include <User_Setups/Setup2_ST7735.h>   // Setup file for ESP8266 configured for my ST7735
 //#include <User_Setups/Setup3_ILI9163.h>  // Setup file for ESP8266 configured for my ILI9163
@@ -109,8 +117,6 @@
 //#include <User_Setups/Setup137_LilyGo_TDisplay_RP2040.h>  // Setup file for Lilygo T-Display RP2040 (ST7789 on SPI bus with 135x240 TFT)
 
 //#include <User_Setups/Setup200_GC9A01.h>           // Setup file for ESP32 and GC9A01 240 x 240 TFT
-
-#include <User_Setups/Setup201_WT32_SC01.h>        // Setup file for ESP32 based WT32_SC01 from Seeed
 
 //#include <User_Setups/Setup202_SSD1351_128.h>      // Setup file for ESP32/ESP8266 based SSD1351 128x128 1.5inch OLED display
 
