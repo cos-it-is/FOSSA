@@ -23,7 +23,8 @@
 
 //_*_*_*_*_*_*_ATM Versions_*_*_*_*_*_*_*_*
 
-#include <User_Setups/ESP32_2432S028.h>  // Setup file for ESP32_2432S028 integrated ESP32 with 2.8inch screen
+#include <User_Setups/ESP32_2432S035R.h>  // Setup file for ESP32_2432S035R integrated ESP32 with 3.5inch screen
+//#include <User_Setups/ESP32_2432S028R.h>  // Setup file for ESP32_2432S028R integrated ESP32 with 2.8inch screen
 //#include <User_Setups/Setup201_WT32_SC01.h>        // Setup file for ESP32 based WT32_SC01 3.5inch
 
 //_*_*_*_*_*_*_*_*_*_*_*_
