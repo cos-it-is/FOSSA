@@ -19,6 +19,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include <Hash.h>
 #include "qrcoded.h"
 #include "Bitcoin.h"
+#include "SPI.h"
 //========================================================//
 //============EDIT IF USING DIFFERENT HARDWARE============//
 //========================================================//
@@ -27,7 +28,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 bool format = false; // true for formatting FOSSA memory, use once, then make false and reflash
 
 //SCREEN SETTINGS--
-bool screenSizeBool = true; //true or false 2.8 or 3.5 inch respectively
+bool screenSize = true; //true or false 3.5 or 2.8 inch respectively
 
 
 //BUTTON SETTINGS--
@@ -64,7 +65,7 @@ String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
 String logoName = "SatsPay"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
 String releaseVersion = "0.1"; //set the version of the release here.
 String logoJpg = "/satspay.jpg"; //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
-#define SD_CS   5
+#define SDCard 5
 //========================================================//
 //========================================================//
 //========================================================//
@@ -88,8 +89,6 @@ int charge;
 bool billBool = true;
 bool coinBool = true;
 
-int tftW = 320; //tft.width()
-int tftH = 240; //tft.height()
 int moneyTimer = 0;
 
 // Coin and Bill Acceptor amounts
@@ -237,17 +236,15 @@ Button BTNA(buttonPin, false);
 /////////////////////////////////////
 
 void setup()  
-{ 
-  // The jpeg image can be scaled by a factor of 1, 2, 4, or 8
-  TJpgDec.setJpgScale(1);
-
-  // The decoder must be given the exact name of the rendering function above
-  TJpgDec.setCallback(printLogo);
-   // Initialise SD before TFT
-  if (!SD.begin(SD_CS)) {
-    Serial.println(F("SD.begin failed!"));
+{
+  if (!SD.begin(SDCard)) {
+    printMessage("SD Card error", "", "", TFT_WHITE, TFT_BLACK);
     while (1) delay(0);
   }
+  tft.setSwapBytes(true);
+  TJpgDec.setJpgScale(1);
+  TJpgDec.setCallback(printLogo);
+
   if (useTouch){
   buttonPress = "TAP SCREEN";
   }
@@ -259,9 +256,10 @@ void setup()
   tft.init();
   tft.setRotation(1);
   tft.invertDisplay(false);
-  TJpgDec.drawSdJpg(0, 0, "/satspay.jpg");
   delay(2000);
-  //tft.fillScreen(TFT_BLACK);
+  TJpgDec.drawSdJpg(0, 0, logoJpg);
+  delay(2000);
+  tft.fillScreen(TFT_BLACK);
   logo();
 
   int timer = 0;
@@ -389,7 +387,7 @@ void setup()
   config.apid = "Device-" + String((uint32_t)ESP.getEfuseMac(), HEX);
   config.psk = password;
   config.menuItems = AC_MENUITEM_CONFIGNEW | AC_MENUITEM_OPENSSIDS | AC_MENUITEM_RESET;
-  config.title = "FOSSA";						 
+  config.title = logoName;						 
   config.reconnectInterval = 1;
 
   if (triggerAp == true)
@@ -432,22 +430,8 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
   // This function will clip the image block rendering automatically at the TFT boundaries
   tft.pushImage(x, y, w, h, bitmap);
 
-  // This might work instead if you adapt the sketch to use the Adafruit_GFX library
-  // tft.drawRGBBitmap(x, y, bitmap, w, h);
-
   // Return 1 to decode next block
   return 1;
-}
-
-void screenSize() {
-  if (screenSizeBool){
-   tftW = 320;
-   tftH = 240;
-  }
-  else {
-   tftW = 480;
-   tftH = 320;
-  }
 }
 
 void setLang(){
@@ -467,19 +451,7 @@ void setLang(){
 }
 void printMessage(String text1, String text2, String text3, int ftcolor, int bgcolor)
 {
-  if (screenSizeBool){
-  tft.fillScreen(bgcolor);
-  tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(3);
-  tft.setCursor(30, 40);
-  tft.println(text1);
-  tft.setCursor(30, 120);
-  tft.println(text2);
-  tft.setCursor(30, 200);
-  tft.setTextSize(2);
-  tft.println(text3);
-  }
-  else {
+  if (screenSize){
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
   tft.setTextSize(5);
@@ -489,24 +461,40 @@ void printMessage(String text1, String text2, String text3, int ftcolor, int bgc
   tft.println(text2);
   tft.setCursor(30, 200);
   tft.setTextSize(3);
-  tft.println(text3);					 
+  tft.println(text3);  
+  }
+  else {
+  tft.fillScreen(bgcolor);
+  tft.setTextColor(ftcolor, bgcolor);
+  tft.setTextSize(4);
+  tft.setCursor(30, 40);
+  tft.println(text1);
+  tft.setCursor(30, 120);
+  tft.println(text2);
+  tft.setCursor(30, 200);
+  tft.setTextSize(3);
+  tft.println(text3);				 
   }
 }
 
 void logo()
 {
-  /*tft.fillScreen(TFT_BLACK);
-  tft.setCursor(130, 100);
+  if (screenSize){
+  tft.fillScreen(TFT_WHITE);
+  tft.setCursor(90, 60);
   tft.setTextSize(10);
-  tft.setTextColor(TFT_PURPLE);
-  tft.println("logoName");
-  tft.setTextColor(TFT_WHITE);
-  tft.setCursor(40, 170);
-  tft.setTextSize(3);
+  tft.setTextColor(TFT_ORANGE);
+  tft.println(logoName);
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(105, 170);
+  tft.setTextSize(4);
   tft.println("Bitcoin ATM");
-  tft.setCursor(10, 220);
-  tft.setTextSize(1);
-  tft.setTextColor(TFT_PURPLE);*/
+  tft.setCursor(10, 290);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_PURPLE);
+  tft.println("Version: " + releaseVersion);
+  }
+  else {
   tft.fillScreen(TFT_WHITE);
   tft.setCursor(80, 20);
   tft.setTextSize(6);
@@ -520,6 +508,8 @@ void logo()
   tft.setTextSize(1);
   tft.setTextColor(TFT_PURPLE);
   tft.println("Version: " + releaseVersion);
+  }
+  
 }
 
 void feedmefiat()
@@ -569,7 +559,7 @@ void feedmefiat()
     tft.setTextColor(TFT_ORANGE);
     tft.println("Bitcoin ATM");
     //tft.println(ins);
-    tft.setCursor(tftW/32, 220);
+//    tft.setCursor(tftW/32, 220);
     tft.setTextSize(1);
     tft.setTextColor(TFT_WHITE);
     tft.println("Mewnosod nodiadau/darnau arian.");
