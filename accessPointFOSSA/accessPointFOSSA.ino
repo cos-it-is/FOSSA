@@ -487,10 +487,10 @@ void logo()
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(105, 170);
-  tft.setTextSize(6);
+  tft.setTextSize(4);
   tft.println("Bitcoin ATM");
   tft.setCursor(10, 290);
-  tft.setTextSize(3);
+  tft.setTextSize(2);
   tft.setTextColor(TFT_PURPLE);
   tft.println("Version: " + releaseVersion);
   }
