@@ -32,8 +32,8 @@ bool screenSize = true; //true or false 3.5 or 2.8 inch respectively
 
 
 //BUTTON SETTINGS--
-bool useTouch = false; //Set to true to use touch screen tap, false for physical button.
-#define buttonPin 22 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (works on pin 22 for ESP32-2432S028R
+bool useTouch = true; //Set to true to use touch screen tap, false for physical button.
+#define buttonPin 36 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (button works on pin 22, touch 36 for ESP32-2432S028R
 
 
 //LANGUAGE SETTINGS--
@@ -62,9 +62,9 @@ String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
 #define INHIBITMECH 23 //Coinmech 22
 
 //PERSONALISATION SETTINGS--
-String logoName = "SatsPay"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
+String logoName = "FOSSA"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
 String releaseVersion = "0.1"; //set the version of the release here.
-String logoJpg = "/satspay.jpg"; //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
+String splashJpg = "/splash.jpg"; //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
 #define SDCard 5
 //========================================================//
 //========================================================//
@@ -256,8 +256,7 @@ void setup()
   tft.init();
   tft.setRotation(1);
   tft.invertDisplay(false);
-  delay(2000);
-  TJpgDec.drawSdJpg(0, 0, logoJpg);
+  TJpgDec.drawSdJpg(0, 0, splashJpg);
   delay(2000);
   tft.fillScreen(TFT_BLACK);
   logo();
@@ -481,15 +480,15 @@ void logo()
 {
   if (screenSize){
   tft.fillScreen(TFT_WHITE);
-  tft.setCursor(90, 60);
   tft.setTextSize(10);
+  tft.setCursor(150, 50);
   tft.setTextColor(TFT_ORANGE);
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
-  tft.setCursor(105, 170);
-  tft.setTextSize(4);
+  tft.setCursor(80, 160);
+  tft.setTextSize(6);
   tft.println("Bitcoin ATM");
-  tft.setCursor(10, 290);
+  tft.setCursor(10, 300);
   tft.setTextSize(2);
   tft.setTextColor(TFT_PURPLE);
   tft.println("Version: " + releaseVersion);
@@ -508,156 +507,106 @@ void logo()
   tft.setTextSize(1);
   tft.setTextColor(TFT_PURPLE);
   tft.println("Version: " + releaseVersion);
-  }
-  
+  }  
 }
 
 void feedmefiat()
-{
-  /*tft.setTextColor(TFT_WHITE);
-  tft.setCursor(60, 40);
+//String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
+{ 
+ if (screenSize){
+  tft.setTextColor(TFT_ORANGE);
+  tft.setCursor(110, 10);
+  tft.setTextSize(4);
+  tft.println("Bitcoin ATM");
+  tft.setTextSize(8);
+  tft.setCursor(180, 80);
+  tft.println("BUY");
+  tft.setCursor(100, 150);
+  tft.println("BITCOIN");
+  tft.setCursor(150, 220);
+  tft.println("HERE!");
+  delay(100);
+  tft.setTextColor(TFT_GREEN);
+  tft.setCursor(180, 80);
+  tft.println("BUY");
+  tft.setCursor(100, 150);
+  tft.println("BITCOIN");
+  tft.setCursor(150, 220);
+  tft.println("HERE!");
+  delay(100);
+  tft.setTextColor(TFT_BLUE);
+  tft.setCursor(180, 80);
+  tft.println("BUY");
+  tft.setCursor(100, 150);
+  tft.println("BITCOIN");
+  tft.setCursor(150, 220);
+  tft.println("HERE!");
+  delay(100);
+  tft.setTextColor(TFT_ORANGE);
+  tft.setCursor(180, 80);
+  tft.println("BUY");
+  tft.setCursor(100, 150);
+  tft.println("BITCOIN");
+  tft.setCursor(150, 220);
+  tft.println("HERE!");
+  delay(100);
+  tft.setCursor(10, 300);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_ORANGE);
+  tft.println(langSelect[10]);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_ORANGE);
+  tft.setCursor(380, 300);
+  tft.println("Fee:" + String(charge) + "%");
+  }
+  /*else {
+  tft.setTextColor(TFT_ORANGE);
+  tft.setCursor(80, 20);
   tft.setTextSize(3);
-  tft.println("Bitcoin Lightning ATM");
-  tft.setCursor(120, 280);
-  tft.println("(feed me fiat. " + String(charge) + "% charge)");
+  tft.setTextColor(TFT_ORANGE);
+  tft.println("Bitcoin ATM");
+  tft.setCursor(10, 220);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_ORANGE);
+  tft.println("Insert notes/coins.");
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_ORANGE);
+  tft.setCursor(10, 280);
+  tft.println("Fee:" + String(charge) + "%");
   tft.setTextSize(10);
   tft.setCursor(160, 80);
-  tft.println("SATS");
+  tft.println("BUY");
   tft.setCursor(180, 140);
-  tft.println("FOR");
+  tft.println("BITCOIN");
   tft.setCursor(160, 200);
-  tft.println("FIAT!");
+  tft.println("HERE");
   delay(100);
   tft.setTextColor(TFT_GREEN);
   tft.setCursor(160, 80);
-  tft.println("SATS");
+  tft.println("BUY");
   tft.setCursor(180, 140);
-  tft.println("FOR");
+  tft.println("BITCOIN");
   tft.setCursor(160, 200);
-  tft.println("FIAT!");
+  tft.println("HERE!");
   delay(100);
   tft.setTextColor(TFT_BLUE);
   tft.setCursor(160, 80);
-  tft.println("SATS");
+  tft.println("BUY");
   tft.setCursor(180, 140);
-  tft.println("FOR");
+  tft.println("BITCOIN");
   tft.setCursor(160, 200);
-  tft.println("FIAT!");
+  tft.println("HERE!");
   delay(100);
   tft.setTextColor(TFT_ORANGE);
   tft.setCursor(160, 80);
-  tft.println("SATS");
+  tft.println("BUY");
   tft.setCursor(180, 140);
-  tft.println("FOR");
+  tft.println("BITCOIN");
   tft.setCursor(160, 200);
-  tft.println("FIAT!");
-  delay(100);*/
-  if (nativeLang) { 
-    tft.setTextColor(TFT_WHITE);
-    tft.setCursor(80, 20);
-    tft.setTextSize(3);
-    tft.setTextColor(TFT_ORANGE);
-    tft.println("Bitcoin ATM");
-    //tft.println(ins);
-//    tft.setCursor(tftW/32, 220);
-    tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE);
-    tft.println("Mewnosod nodiadau/darnau arian.");
-    tft.setTextSize(3);
-    tft.setCursor(130, 80);
-    tft.println("PRYNU");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(140, 160);
-    tft.println("YMA!");
-    delay(300);
-    tft.setTextColor(TFT_GREEN);
-    tft.setCursor(130, 80);
-    tft.println("PRYNU");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(140, 160);
-    tft.println("YMA!");
-    delay(300);
-    tft.setTextColor(TFT_BLUE);
-    tft.setCursor(130, 80);
-    tft.println("PRYNU");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(140, 160);
-    tft.println("YMA!");
-    delay(300);
-    tft.setTextColor(TFT_ORANGE);
-    tft.setCursor(130, 80);
-    tft.println("PRYNU");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(140, 160);
-    tft.println("YMA!");
-    delay(300);
-    tft.setTextColor(TFT_PINK);
-    tft.setCursor(130, 80);
-    tft.println("PRYNU");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(140, 160);
-    tft.println("YMA!");
-    delay(300);
-  }
-  else if (nativeLang == false)
-  {
-    tft.setTextColor(TFT_WHITE);
-    tft.setCursor(80, 20);
-    tft.setTextSize(3);
-    tft.setTextColor(TFT_ORANGE);
-    tft.println("Bitcoin ATM");
-    tft.setCursor(10, 220);
-    tft.setTextSize(2);
-    tft.setTextColor(TFT_WHITE);
-    tft.println("Insert notes/coins.");
-    tft.setTextSize(3);
-    tft.setCursor(140, 80);
-    tft.println("BUY");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(130, 160);
-    tft.println("HERE!");
-    delay(300);
-    tft.setTextColor(TFT_GREEN);
-    tft.setCursor(140, 80);
-    tft.println("BUY");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(130, 160);
-    tft.println("HERE!");
-    delay(300);
-    tft.setTextColor(TFT_BLUE);
-    tft.setCursor(140, 80);
-    tft.println("BUY");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(130, 160);
-    tft.println("HERE!");
-    delay(300);
-    tft.setTextColor(TFT_ORANGE);
-    tft.setCursor(140, 80);
-    tft.println("BUY");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(130, 160);
-    tft.println("HERE!");
-    delay(300);
-    tft.setTextColor(TFT_PINK);
-    tft.setCursor(140, 80);
-    tft.println("BUY");
-    tft.setCursor(110, 120);
-    tft.println("BITCOIN");
-    tft.setCursor(130, 160);
-    tft.println("HERE!");
-    delay(300);
-  }
+  tft.println("HERE!");
+  delay(100);
+ }*/
 }
-
 void qrShowCodeLNURL(String message)
 {
   tft.fillScreen(TFT_WHITE);
@@ -673,11 +622,11 @@ void qrShowCodeLNURL(String message)
     {
       if (qrcode_getModule(&qrcoded, x, y))
       {
-        tft.fillRect(40 + 4 * x, 40 + 4 * y, 4, 4, TFT_BLACK);
+        tft.fillRect(120 + 4 * x, 40 + 4 * y, 4, 4, TFT_BLACK);
       }
       else
       {
-        tft.fillRect(40 + 4 * x, 40 + 4 * y, 4, 4, TFT_WHITE);
+        tft.fillRect(120 + 4 * x, 40 + 4 * y, 4, 4, TFT_WHITE);
       }
     }
   }
@@ -729,7 +678,7 @@ void moneyTimerFun()
        }
     }
     BTNA.read();
-    if (BTNA.wasReleased() || total > maxamount) {
+    if (BTNA.wasReleased() || total == maxamount) {
       waitForTap = false;
     }
   }
