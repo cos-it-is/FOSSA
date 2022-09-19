@@ -453,7 +453,7 @@ void printMessage(String text1, String text2, String text3, int ftcolor, int bgc
   if (screenSize){
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(5);
+  tft.setTextSize(4);
   tft.setCursor(30, 40);
   tft.println(text1);
   tft.setCursor(30, 120);
@@ -465,7 +465,7 @@ void printMessage(String text1, String text2, String text3, int ftcolor, int bgc
   else {
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(4);
+  tft.setTextSize(3);
   tft.setCursor(30, 40);
   tft.println(text1);
   tft.setCursor(30, 120);
@@ -481,12 +481,12 @@ void logo()
   if (screenSize){
   tft.fillScreen(TFT_WHITE);
   tft.setTextSize(10);
-  tft.setCursor(150, 50);
+  tft.setCursor(140, 50);
   tft.setTextColor(TFT_ORANGE);
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(80, 160);
-  tft.setTextSize(6);
+  tft.setTextSize(5);
   tft.println("Bitcoin ATM");
   tft.setCursor(10, 300);
   tft.setTextSize(2);
