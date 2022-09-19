@@ -46,15 +46,19 @@ String res = "Ailddechrau/lansio porth!"; //"Restart/launch portal!"
 String sta = "Dechrau Derbynydd(au)"; //"Starting Acceptor(s)"
 String wak = "Deffro."; //"Waking up."
 String ent = "wedi'i gofrestru."; //"entered."
-String ver = "Fersiwn"; //"Version"
+String ver = "Fersiwn: "; //"Version"
 String buy = "PRYNU"; //"BUY"
 String her = "YMA"; //"HERE"
 String ins = "Mewnosod nodiadau/darnau arian."; //"Insert notes/coins."
-String exi = "PWYSWCH BOTWM I YMADAEL."; //"PRESS BUTTON TO EXIT."
-String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
+String exi = "I YMADAEL."; //"TO EXIT."
+String lan = "i newid iaith."; //"change language."
+String fee = "Ffi:";
+String pre = "BOTWM GWASGU"; //Press button
+String tap = "SGRIN TAP"; //Tap Screen
+String tot = "Cyfanswm: "; //Total
+String sca = "SGANIO FI."; //SCAN ME.
 
 //ACCEPTOR SETTINGS--
-
 #define RX1 1 //define the GPIO connected TO the TX of the bill acceptor
 #define TX1 3 //define the GPIO connected TO the RX of the bill acceptor
 
@@ -246,18 +250,19 @@ void setup()
   TJpgDec.setCallback(printLogo);
 
   if (useTouch){
-  buttonPress = "TAP SCREEN";
+  buttonPress = tap;
   }
   else {
-  buttonPress = "PRESS BUTTON";
+  buttonPress = pre;
   }
   BTNA.begin();
   setLang();
   tft.init();
   tft.setRotation(1);
   tft.invertDisplay(false);
+  tft.fillScreen(TFT_BLACK);
   TJpgDec.drawSdJpg(0, 0, splashJpg);
-  delay(2000);
+  delay(3000);
   tft.fillScreen(TFT_BLACK);
   logo();
 
@@ -392,7 +397,7 @@ void setup()
   if (triggerAp == true)
   {
     digitalWrite(11, LOW);
-    printMessage("Portal launched", "", "", TFT_WHITE, TFT_BLACK);
+    printMessage(por, "", "", TFT_WHITE, TFT_BLACK);
     config.immediateStart = true;
     portal.join({elementsAux, saveAux});
     portal.config(config);
@@ -405,7 +410,7 @@ void setup()
   }
   if(currencyATM == ""){
     digitalWrite(11, LOW);
-    printMessage("Restart", "launch portal!", "", TFT_WHITE, TFT_BLACK);
+    printMessage(res, lau, "", TFT_WHITE, TFT_BLACK);
     delay(99999999);
   }
 }
@@ -435,17 +440,23 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
 
 void setLang(){
   if (nativeLang = false){
-  lau = "Launch portal";
-  por = "Portal launched.";
-  res = "Restart/launch portal!";
-  sta = "Starting Acceptor(s)";
-  wak = "Waking up.";
-  ent = "entered.";
-  ver = "Version";
-  buy = "BUY";
-  her = "HERE";
-  ins = "Insert notes/coins.";
-  exi = " TO FINISH.";
+ lau == "Launch portal";
+ por == "Portal launched.";
+ res == "Restart/launch portal!";
+ sta == "Starting Acceptor(s)";
+ wak == "Waking up.";
+ ent == "entered.";
+ ver == "Version: ";
+ buy == "BUY";
+ her == "HERE";
+ ins == "Insert notes/coins.";
+ exi == "TO EXIT.";
+ fee == "Fee:";
+ lan == "change language.";
+ pre == "Press button";
+ tap == "Tap Screen";
+ tot == "Total";
+ sca == "SCAN ME.";
 }
 }
 void printMessage(String text1, String text2, String text3, int ftcolor, int bgcolor)
@@ -491,7 +502,7 @@ void logo()
   tft.setCursor(10, 300);
   tft.setTextSize(2);
   tft.setTextColor(TFT_PURPLE);
-  tft.println("Version: " + releaseVersion);
+  tft.println(ver + releaseVersion);
   }
   else {
   tft.fillScreen(TFT_WHITE);
@@ -506,7 +517,7 @@ void logo()
   tft.setCursor(10, 220);
   tft.setTextSize(1);
   tft.setTextColor(TFT_PURPLE);
-  tft.println("Version: " + releaseVersion);
+  tft.println(ver + releaseVersion);
   }  
 }
 
@@ -520,44 +531,44 @@ void feedmefiat()
   tft.println("Bitcoin ATM");
   tft.setTextSize(8);
   tft.setCursor(180, 80);
-  tft.println("BUY");
+  tft.println(buy);
   tft.setCursor(100, 150);
   tft.println("BITCOIN");
   tft.setCursor(150, 220);
-  tft.println("HERE!");
+  tft.println(her);
   delay(100);
   tft.setTextColor(TFT_GREEN);
   tft.setCursor(180, 80);
-  tft.println("BUY");
+  tft.println(buy);
   tft.setCursor(100, 150);
   tft.println("BITCOIN");
   tft.setCursor(150, 220);
-  tft.println("HERE!");
+  tft.println(her);
   delay(100);
   tft.setTextColor(TFT_BLUE);
   tft.setCursor(180, 80);
-  tft.println("BUY");
+  tft.println(buy);
   tft.setCursor(100, 150);
   tft.println("BITCOIN");
   tft.setCursor(150, 220);
-  tft.println("HERE!");
+  tft.println(her);
   delay(100);
   tft.setTextColor(TFT_ORANGE);
   tft.setCursor(180, 80);
-  tft.println("BUY");
+  tft.println(buy);
   tft.setCursor(100, 150);
   tft.println("BITCOIN");
   tft.setCursor(150, 220);
-  tft.println("HERE!");
+  tft.println(her);
   delay(100);
   tft.setCursor(10, 300);
   tft.setTextSize(2);
-  tft.setTextColor(TFT_ORANGE);
-  tft.println(langSelect[10]);
+  tft.setTextColor(TFT_WHITE);
+  tft.println(ins);
   tft.setTextSize(2);
-  tft.setTextColor(TFT_ORANGE);
-  tft.setCursor(380, 300);
-  tft.println("Fee:" + String(charge) + "%");
+  tft.setTextColor(TFT_GREEN);
+  tft.setCursor(10, 280);
+  tft.println(fee + String(charge) + "%");
   }
   /*else {
   tft.setTextColor(TFT_ORANGE);
@@ -656,6 +667,11 @@ void moneyTimerFun()
   while( waitForTap || total == 0){
     if(total == 0){
       feedmefiat();
+      BTNA.read();
+      if (BTNA.wasReleased()) {
+        tft.fillScreen(TFT_BLACK);
+        nativeLang = !nativeLang;
+      }
     }
     if (SerialPort1.available()) {
       int x = SerialPort1.read();
@@ -663,7 +679,7 @@ void moneyTimerFun()
          if((i+1) == x){							 
            bills = bills + billAmountInt[i];
            total = (coins + bills);
-           printMessage(billAmountInt[i] + currencyATM, "Total: " + String(total) + currencyATM, buttonPress + exi, TFT_WHITE, TFT_BLACK);					 
+           printMessage(billAmountInt[i] + currencyATM, tot + String(total) + currencyATM, buttonPress + exi, TFT_WHITE, TFT_BLACK);					 
          }
        }
     }
