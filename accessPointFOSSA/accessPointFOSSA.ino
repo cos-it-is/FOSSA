@@ -37,26 +37,62 @@ bool useTouch = true; //Set to true to use touch screen tap, false for physical 
 
 
 //LANGUAGE SETTINGS--
-bool nativeLang = true; //set to true to set language to your countries native language. i.e. NOT English
+bool nativeLang = false; //set to true to set language to your countries native language. i.e. NOT English
 
 //Populate the translated strings of your native language here:
-String lau = "lansio porth"; //"Launch portal"
-String por = "Lansio'r porth."; //"Portal launched."
-String res = "Ailddechrau/lansio porth!"; //"Restart/launch portal!"
-String sta = "Dechrau Derbynydd(au)"; //"Starting Acceptor(s)"
-String wak = "Deffro."; //"Waking up."
-String ent = "wedi'i gofrestru."; //"entered."
-String ver = "Fersiwn: "; //"Version"
-String buy = "PRYNU"; //"BUY"
-String her = "YMA"; //"HERE"
-String ins = "Mewnosod nodiadau/darnau arian."; //"Insert notes/coins."
-String exi = "I YMADAEL."; //"TO EXIT."
-String lan = "i newid iaith."; //"change language."
-String fee = "Ffi:";
-String pre = "BOTWM GWASGU"; //Press button
-String tap = "SGRIN TAP"; //Tap Screen
-String tot = "Cyfanswm: "; //Total
-String sca = "SGANIO FI."; //SCAN ME.
+String lauN = "lansio porth"; //"Launch portal"
+String porN = "Lansio'r porth."; //"Portal launched."
+String resN = "Ailddechrau/lansio porth!"; //"Restart/launch portal!"
+String staN = "Dechrau Derbynydd(au)"; //"Starting Acceptor(s)"
+String wakN = "Deffro."; //"Waking up."
+String entN = "wedi'i gofrestru."; //"entered."
+String verN = "Fersiwn: "; //"Version"
+String buyN = "PRYNU"; //"BUY"
+String herN = "YMA!"; //"HERE"
+String insN = "Mewnosod nodiadau/darnau arian."; //"Insert notes/coins."
+String exiN = "I YMADAEL."; //"TO EXIT."
+String lanN = "i newid iaith."; //"change language."
+String feeN = "Ffi:";
+String preN = "BOTWM GWASGU"; //Press button
+String tapN = "SGRIN TAP"; //Tap Screen
+String totN = "Cyfanswm: "; //Total
+String scaN = "SGANIO FI."; //SCAN ME.
+
+String lauE = "Launch portal";
+String porE = "Portal launched.";
+String resE = "Restart/launch portal!";
+String staE = "Starting Acceptor(s)";
+String wakE = "Waking up.";
+String entE = "entered.";
+String verE = "Version: ";
+String buyE = "BUY";
+String herE = "HERE!";
+String insE = "Insert notes/coins.";
+String exiE = "TO EXIT.";
+String feeE = "Fee:";
+String lanE = "change language.";
+String preE = "Press button";
+String tapE = "Tap Screen";
+String totE = "Total";
+String scaE = "SCAN ME.";
+
+String lau;
+String por;
+String res;
+String sta;
+String wak;
+String ent;
+String ver;
+String buy;
+String her;
+String ins;
+String exi;
+String lan;
+String fee;
+String pre;
+String tap;
+String tot;
+String sca;
 
 //ACCEPTOR SETTINGS--
 #define RX1 1 //define the GPIO connected TO the TX of the bill acceptor
@@ -439,26 +475,46 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
 }
 
 void setLang(){
-  if (nativeLang = false){
- lau == "Launch portal";
- por == "Portal launched.";
- res == "Restart/launch portal!";
- sta == "Starting Acceptor(s)";
- wak == "Waking up.";
- ent == "entered.";
- ver == "Version: ";
- buy == "BUY";
- her == "HERE";
- ins == "Insert notes/coins.";
- exi == "TO EXIT.";
- fee == "Fee:";
- lan == "change language.";
- pre == "Press button";
- tap == "Tap Screen";
- tot == "Total";
- sca == "SCAN ME.";
+ if (nativeLang == false){
+ lau = lauE;
+ por = porE;
+ res = resE;
+ sta = staE;
+ wak = wakE;
+ ent = entE;
+ ver = verE;
+ buy = buyE;
+ her = herE;
+ ins = insE;
+ exi = exiE;
+ fee = feeE;
+ lan = lanE;
+ pre = preE;
+ tap = tapE;
+ tot = totE;
+ sca = scaE;
+}
+else {
+ lau = lauN;
+ por = porN;
+ res = resN;
+ sta = staN;
+ wak = wakN;
+ ent = entN;
+ ver = verN;
+ buy = buyN;
+ her = herN;
+ ins = insN;
+ exi = exiN;
+ fee = feeN;
+ lan = lanN;
+ pre = preN;
+ tap = tapN;
+ tot = totN;
+ sca = scaN;
 }
 }
+
 void printMessage(String text1, String text2, String text3, int ftcolor, int bgcolor)
 {
   if (screenSize){
@@ -522,8 +578,16 @@ void logo()
 }
 
 void feedmefiat()
-//String langSelect[] = {lau,por,res,sta,wak,ent,ver,buy,her,ins,exi};
 { 
+  bool waitForTap = true;
+  while(waitForTap){
+    BTNA.read();
+    if (BTNA.wasPressed()) {
+      nativeLang = !nativeLang;
+      setLang();
+      tft.fillScreen(TFT_BLACK);
+      waitForTap = false;
+  }
  if (screenSize){
   tft.setTextColor(TFT_ORANGE);
   tft.setCursor(110, 10);
@@ -569,6 +633,7 @@ void feedmefiat()
   tft.setTextColor(TFT_GREEN);
   tft.setCursor(10, 280);
   tft.println(fee + String(charge) + "%");
+  }
   }
   /*else {
   tft.setTextColor(TFT_ORANGE);
@@ -667,11 +732,6 @@ void moneyTimerFun()
   while( waitForTap || total == 0){
     if(total == 0){
       feedmefiat();
-      BTNA.read();
-      if (BTNA.wasReleased()) {
-        tft.fillScreen(TFT_BLACK);
-        nativeLang = !nativeLang;
-      }
     }
     if (SerialPort1.available()) {
       int x = SerialPort1.read();
