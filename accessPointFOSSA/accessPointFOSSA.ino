@@ -20,6 +20,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include "qrcoded.h"
 #include "Bitcoin.h"
 #include "SPI.h"
+#include "Free_Fonts.h" 
 //========================================================//
 //============EDIT IF USING DIFFERENT HARDWARE============//
 //========================================================//
@@ -284,7 +285,8 @@ void setup()
   tft.setSwapBytes(true);
   TJpgDec.setJpgScale(1);
   TJpgDec.setCallback(printLogo);
-
+  tft.setTextSize(1);
+  tft.setFreeFont(&Orbitron_Light_24);
   if (useTouch){
   buttonPress = tap;
   }
