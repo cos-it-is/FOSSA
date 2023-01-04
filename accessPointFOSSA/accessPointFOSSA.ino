@@ -20,7 +20,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include "qrcoded.h"
 #include "Bitcoin.h"
 #include "SPI.h"
-#include "Free_Fonts.h" 
+#include <Free_Fonts.h> 
 //========================================================//
 //============EDIT IF USING DIFFERENT HARDWARE============//
 //========================================================//
@@ -33,9 +33,9 @@ bool screenSize = true; //true or false 3.5 or 2.8 inch respectively
 
 
 //BUTTON SETTINGS--
-bool useTouch = true; //Set to true to use touch screen tap, false for physical button.
-#define buttonPin 36 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (button works on pin 22, touch 36 for ESP32-2432S028R
-
+bool useTouch = false; //Set to true to use touch screen tap, false for physical button.
+#define buttonPin 22 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (button works on pin 22, touch 36 for ESP32-2432S028R
+int debounce = 50; //Set the debounce time (milliseconds) for the button, default should be 25, but may need modification if issues with sporadic presses are seen.
 
 //LANGUAGE SETTINGS--
 bool nativeLang = false; //set to true to set language to your countries native language. i.e. NOT English
@@ -74,7 +74,7 @@ String feeE = "Fee:";
 String lanE = "change language.";
 String preE = "Press button";
 String tapE = "Tap Screen";
-String totE = "Total";
+String totE = "Total: ";
 String scaE = "SCAN ME.";
 
 String lau;
@@ -99,8 +99,8 @@ String sca;
 #define RX1 1 //define the GPIO connected TO the TX of the bill acceptor
 #define TX1 3 //define the GPIO connected TO the RX of the bill acceptor
 
-#define TX2 34 //Coinmech 35
-#define INHIBITMECH 23 //Coinmech 22
+#define TX2 35 //Coinmech 35
+#define INHIBITMECH 21 //Coinmech 22
 
 //PERSONALISATION SETTINGS--
 String logoName = "FOSSA"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
@@ -268,7 +268,7 @@ AutoConnectConfig config;
 AutoConnectAux elementsAux;
 AutoConnectAux saveAux;
 
-Button BTNA(buttonPin, false);
+Button BTNA(buttonPin, 50, false);
 
 
 
@@ -286,7 +286,7 @@ void setup()
   TJpgDec.setJpgScale(1);
   TJpgDec.setCallback(printLogo);
   tft.setTextSize(1);
-  tft.setFreeFont(&Orbitron_Light_24);
+  //tft.setFreeFont(&Yellowtail_32);
   if (useTouch){
   buttonPress = tap;
   }
@@ -555,10 +555,10 @@ void logo()
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(80, 160);
-  tft.setTextSize(5);
+  tft.setTextSize(1);
   tft.println("Bitcoin ATM");
   tft.setCursor(10, 300);
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.setTextColor(TFT_PURPLE);
   tft.println(ver + releaseVersion);
   }
@@ -581,7 +581,7 @@ void logo()
 
 void feedmefiat()
 { 
-  bool waitForTap = true;
+  /*bool waitForTap = true;
   while(waitForTap){
     BTNA.read();
     if (BTNA.wasPressed()) {
@@ -589,7 +589,7 @@ void feedmefiat()
       setLang();
       tft.fillScreen(TFT_BLACK);
       waitForTap = false;
-  }
+  }*/
  if (screenSize){
   tft.setTextColor(TFT_ORANGE);
   tft.setCursor(110, 10);
@@ -636,7 +636,7 @@ void feedmefiat()
   tft.setCursor(10, 280);
   tft.println(fee + String(charge) + "%");
   }
-  }
+  //}
   /*else {
   tft.setTextColor(TFT_ORANGE);
   tft.setCursor(80, 20);
