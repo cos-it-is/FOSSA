@@ -103,7 +103,7 @@ String sca;
 #define INHIBITMECH 21 //Coinmech 22
 
 //PERSONALISATION SETTINGS--
-String logoName = "FOSSA"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
+String logoName = "The B.A.T"; //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
 String releaseVersion = "0.1"; //set the version of the release here.
 String splashJpg = "/splash.jpg"; //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
 #define SDCard 5
@@ -589,16 +589,7 @@ void logo()
 
 void feedmefiat()
 { 
-  bool waitForPress = true;
-  while(waitForPress){
-    BTNA.read();
-    if (BTNA.wasPressed()) {
-      nativeLang = !nativeLang;
-      setLang();
-      tft.fillScreen(TFT_BLACK);
-    }
- 
-    if (screenSize){
+    if(screenSize){
       tft.setTextColor(TFT_ORANGE);
       tft.setCursor(110, 10);
       tft.setTextSize(4);
@@ -644,8 +635,13 @@ void feedmefiat()
       tft.setCursor(10, 280);
       tft.println(fee + String(charge) + "%");
     }
-    waitForPress = false;
-  }
+   /* BTNA.read();
+    if (BTNA.wasPressed()) {
+      nativeLang = !nativeLang;
+      setLang();
+      tft.fillScreen(TFT_BLACK);
+      langChange = false;
+    } */
 }
 
   /*else {
@@ -736,15 +732,22 @@ void qrShowCodeLNURL(String message)
 void moneyTimerFun(String buttonPress)
 {
   bool waitForTap = true;
+  bool langChange = true;
   coins = 0;
   bills = 0;
   total = 0;
   
 					
-  while( waitForTap || total == 0){
+  while( waitForTap && total == 0){
     if(total == 0){
       feedmefiat();
+      BTNA.read();
+    if (BTNA.wasPressed() && total == 0) {
+      nativeLang = !nativeLang;
+      setLang();
+      tft.fillScreen(TFT_BLACK);
     }
+      langChange = false;
     if (SerialPort1.available()) {
       int x = SerialPort1.read();
        for (int i = 0; i < billAmountSize; i++){
@@ -769,6 +772,7 @@ void moneyTimerFun(String buttonPress)
     if (BTNA.wasReleased() || total == maxamount) {
       waitForTap = false;
     }
+  }
   }
   total = (coins + bills) * 100;
 
