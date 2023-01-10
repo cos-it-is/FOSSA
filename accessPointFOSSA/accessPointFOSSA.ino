@@ -57,7 +57,8 @@ String feeN = "Ffi:"; //"Fee"
 String preN = "BOTWM GWASGU "; //Press button
 String tapN = "SGRIN TAP "; //Tap Screen
 String totN = "Cyfanswm: "; //Total
-String scaN = "SGANIO FI I DDERBYN."; //SCAN ME TO RECEIVE.
+String scaN = "SGANIO FI I DDERBYN SATS."; //SCAN ME TO RECEIVE.
+String indN = "MEWNOSODD"; //INSERTED.
 
 String lauE = "Launch portal";
 String porE = "Portal launched.";
@@ -75,7 +76,8 @@ String lanE = "change language.";
 String preE = "PRESS BUTTON ";
 String tapE = "TAP SCREEN ";
 String totE = "Total: ";
-String scaE = "SCAN ME TO RECEIVE. ";
+String scaE = "SCAN ME TO RECEIVE SATS. ";
+String indE = "INSERTED"; 
 
 String lau;
 String por;
@@ -94,6 +96,7 @@ String pre;
 String tap;
 String tot;
 String sca;
+String ind;
 
 //ACCEPTOR SETTINGS--
 #define RX1 1 //define the GPIO connected TO the TX of the bill acceptor
@@ -268,7 +271,7 @@ AutoConnectConfig config;
 AutoConnectAux elementsAux;
 AutoConnectAux saveAux;
 
-Button BTNA(buttonPin, 50, false);
+Button BTNA(buttonPin, 100, false, false);
 
 
 
@@ -287,12 +290,6 @@ void setup()
   TJpgDec.setCallback(printLogo);
   tft.setTextSize(1);
   //tft.setFreeFont(&Yellowtail_32);
-  if (useTouch){
-  buttonPress = tap;
-  }
-  else {
-  buttonPress = pre;
-  }
   BTNA.begin();
   setLang();
   tft.init();
@@ -467,7 +464,7 @@ void loop()
   tft.fillScreen(TFT_BLACK);
   moneyTimerFun(buttonPress);
   makeLNURL();
-  qrShowCodeLNURL("SCAN ME." + buttonPress + exi);
+  qrShowCodeLNURL(sca + buttonPress + exi);
 }
 
 bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
@@ -483,6 +480,12 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
 }
 
 void setLang(){
+if (useTouch){
+  buttonPress = tap;
+}
+else {
+  buttonPress = pre;
+}
  if (nativeLang == false){
  lau = lauE;
  por = porE;
@@ -501,6 +504,7 @@ void setLang(){
  tap = tapE;
  tot = totE;
  sca = scaE;
+ ind = indE;
 }
 else {
  lau = lauN;
@@ -520,6 +524,7 @@ else {
  tap = tapN;
  tot = totN;
  sca = scaN;
+ ind = indN;
 }
 }
 
@@ -716,7 +721,7 @@ void qrShowCodeLNURL(String message)
   }
 
   tft.setCursor(40, 290);
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.println(message);
   
@@ -729,7 +734,7 @@ void qrShowCodeLNURL(String message)
   }
 }
 
-void moneyTimerFun(String buttonPress)
+void moneyTimerFun()
 {
   bool waitForTap = true;
   bool langChange = true;
@@ -738,23 +743,24 @@ void moneyTimerFun(String buttonPress)
   total = 0;
   
 					
-  while( waitForTap && total == 0){
+  while(waitForTap || total == 0){
     if(total == 0){
       feedmefiat();
       BTNA.read();
-    if (BTNA.wasPressed() && total == 0) {
+    if (BTNA.wasReleased() && total == 0) {
       nativeLang = !nativeLang;
       setLang();
       tft.fillScreen(TFT_BLACK);
-    }
       langChange = false;
+    }
+    }
     if (SerialPort1.available()) {
       int x = SerialPort1.read();
        for (int i = 0; i < billAmountSize; i++){
          if((i+1) == x){							 
            bills = bills + billAmountInt[i];
            total = (coins + bills);
-           printMessage(billAmountInt[i] + currencyATM + " Inserted", tot + String(total) + currencyATM, buttonPress + exi, TFT_WHITE, TFT_ORANGE, TFT_BLACK);				 
+           printMessage(billAmountInt[i] + currencyATM + " " + ind, tot + String(total) + " " + currencyATM, pre + exi, TFT_WHITE, TFT_ORANGE, TFT_BLACK);				 
          }
        }
     }
@@ -764,16 +770,17 @@ void moneyTimerFun(String buttonPress)
          if((i+1) == x){							 
            coins = coins + coinAmountFloat[i];
            total = (coins + bills);
-           printMessage(coinAmountFloat[i] + currencyATM, tot + String(total) + currencyATM, buttonPress + exi, TFT_WHITE, TFT_ORANGE, TFT_BLACK);					 
+           printMessage(coinAmountFloat[i] + currencyATM + " " + ind, tot + String(total) + currencyATM, pre + exi, TFT_WHITE, TFT_ORANGE, TFT_BLACK);					 
          }
        }
+    
     }
     BTNA.read();
-    if (BTNA.wasReleased() || total == maxamount) {
-      waitForTap = false;
-    }
+    if (BTNA.wasReleased() && (total > 0 || total == maxamount)) {
+    waitForTap = false;	 
   }
   }
+  
   total = (coins + bills) * 100;
 
   // Turn off machines
