@@ -57,7 +57,7 @@ String feeN = "Ffi:"; //"Fee"
 String preN = "BOTWM GWASGU "; //Press button
 String tapN = "SGRIN TAP "; //Tap Screen
 String totN = "Cyfanswm: "; //Total
-String scaN = "SGANIO FI I DDERBYN SATS."; //SCAN ME TO RECEIVE.
+String scaN = "SGANIO FI I DDERBYN SATS. "; //SCAN ME TO RECEIVE.
 String indN = "MEWNOSODD"; //INSERTED.
 
 String lauE = "Launch portal";
@@ -122,7 +122,6 @@ String apPassword = "admin"; //default WiFi AP password
 String baseURLATM;
 String secretATM;
 String currencyATM = "";
-String buttonPress;
 
 int bills;
 float coins;
@@ -271,7 +270,7 @@ AutoConnectConfig config;
 AutoConnectAux elementsAux;
 AutoConnectAux saveAux;
 
-Button BTNA(buttonPin, 100, false, false);
+Button BTNA(buttonPin, debounce, false, false);
 
 
 
@@ -453,18 +452,13 @@ void setup()
 void loop()
 {
   // Turn on machines
-  if (useTouch){
-  buttonPress = tap;
-  }
-  else {
-  buttonPress = pre;
-  }
   SerialPort1.write(184);
   digitalWrite(INHIBITMECH, HIGH);
   tft.fillScreen(TFT_BLACK);
-  moneyTimerFun(buttonPress);
+  setLang();
+  moneyTimerFun();
   makeLNURL();
-  qrShowCodeLNURL(sca + buttonPress + exi);
+  qrShowCodeLNURL(sca + pre + exi);
 }
 
 bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
@@ -480,12 +474,6 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
 }
 
 void setLang(){
-if (useTouch){
-  buttonPress = tap;
-}
-else {
-  buttonPress = pre;
-}
  if (nativeLang == false){
  lau = lauE;
  por = porE;
@@ -747,7 +735,7 @@ void moneyTimerFun()
     if(total == 0){
       feedmefiat();
       BTNA.read();
-    if (BTNA.wasReleased() && total == 0) {
+    if (BTNA.isPressed() && total == 0) {
       nativeLang = !nativeLang;
       setLang();
       tft.fillScreen(TFT_BLACK);
