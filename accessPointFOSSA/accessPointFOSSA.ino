@@ -21,6 +21,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include "Bitcoin.h"
 #include "SPI.h"
 #include <Free_Fonts.h> 
+#include <MontserratAlternates_SemiBold8pt7b.h>
 //========================================================//
 //============EDIT IF USING DIFFERENT HARDWARE============//
 //========================================================//
@@ -28,16 +29,13 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 //FORMATTING
 bool format = false; // true for formatting FOSSA memory, use once, then make false and reflash
 
-//SCREEN SETTINGS--
-bool screenSize = true; //true or false 3.5 or 2.8 inch respectively
-
 
 //BUTTON SETTINGS--
 bool useTouch = false; //Set to true to use touch screen tap, false for physical button.
 #define buttonPin 22 //Set to GPIO for signal to button or touch, this is normally the TP(touch)IRQ IO signal feed IO. (button works on pin 22, touch 36 for ESP32-2432S028R
 int debounce = 50; //Set the debounce time (milliseconds) for the button, default should be 25, but may need modification if issues with sporadic presses are seen.
 
-//LANGUAGE SETTINGS--
+/*//LANGUAGE SETTINGS--
 bool nativeLang = false; //set to true to set language to your countries native language. i.e. NOT English
 
 //Populate the translated strings of your native language here:
@@ -58,7 +56,109 @@ String preN = "BOTWM GWASGU "; //Press button
 String tapN = "SGRIN TAP "; //Tap Screen
 String totN = "Cyfanswm: "; //Total
 String scaN = "SGANIO FI I DDERBYN SATS. "; //SCAN ME TO RECEIVE.
-String indN = "MEWNOSODD"; //INSERTED.
+String indN = "MEWNOSODD"; //INSERTED.*/
+
+struct Language {
+  bool nativeLang = false;
+  String lauN = "";
+  String porN = "";
+  String resN = "";
+  String staN = "";
+  String wakN = "";
+  String entN = "";
+  String verN = "";
+  String buyN = "";
+  String herN = "";
+  String insN = "";
+  String exiN = "";
+  String lanN = "";
+  String feeN = "";
+  String preN = "";
+  String tapN = "";
+  String totN = "";
+  String scaN = "";
+  String indN = "";
+};
+
+Language language;
+
+bool readConfig() {
+    // Open the config.txt file
+    File configFile = SD.open("/config.txt");
+    if (!configFile) {
+        Serial.println("Failed to open config.txt");
+        return false;
+    }
+
+    // Read the file and parse the language settings
+    String line;
+    while (configFile.available()) {
+        line = configFile.readStringUntil('\n');
+        if (line.startsWith("nativeLang")) {
+            if (line.substring(line.lastIndexOf("=") + 2) == "true") {
+                language.nativeLang = true;
+            }
+        } else if (line.startsWith("lauN")) {
+            int endIndex = line.indexOf(";");
+            language.lauN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+        } else if (line.startsWith("porN")) {
+            int endIndex = line.indexOf(";");
+            language.porN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+        } else if (line.startsWith("resN")) {
+            int endIndex = line.indexOf(";");
+            language.resN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+        } else if (line.startsWith("staN")) {
+            int endIndex = line.indexOf(";");
+            language.staN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+        } else if (line.startsWith("wakN")) {
+            int endIndex = line.indexOf(";");
+language.wakN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("entN")) {
+int endIndex = line.indexOf(";");
+language.entN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("verN")) {
+int endIndex = line.indexOf(";");
+language.verN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("buyN")) {
+int endIndex = line.indexOf(";");
+language.buyN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("herN")) {
+int endIndex = line.indexOf(";");
+language.herN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("insN")) {
+int endIndex = line.indexOf(";");
+language.insN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("exiN")) {
+int endIndex = line.indexOf(";");
+language.exiN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("lanN")) {
+int endIndex = line.indexOf(";");
+language.lanN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("feeN")) {
+int endIndex = line.indexOf(";");
+language.feeN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("preN")) {
+int endIndex = line.indexOf(";");
+language.preN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("tapN")) {
+int endIndex = line.indexOf(";");
+language.tapN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("totN")) {
+int endIndex = line.indexOf(";");
+language.totN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("scaN")) {
+int endIndex = line.indexOf(";");
+language.scaN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+} else if (line.startsWith("indN")) {
+int endIndex = line.indexOf(";");
+language.indN = line.substring(line.lastIndexOf("=") + 2, endIndex);
+}
+}
+configFile.close();
+return true;
+}
+
+
 
 String lauE = "Launch portal";
 String porE = "Portal launched.";
@@ -288,8 +388,9 @@ void setup()
   TJpgDec.setJpgScale(1);
   TJpgDec.setCallback(printLogo);
   tft.setTextSize(1);
-  //tft.setFreeFont(&Yellowtail_32);
+  tft.setFreeFont(&MontserratAlternates_SemiBold8pt7b);
   BTNA.begin();
+  readConfig();
   setLang();
   tft.init();
   tft.setRotation(1);
@@ -341,8 +442,9 @@ void setup()
     const JsonObject maRoot2 = doc[2];
     const char *maRoot2Char = maRoot2["value"];
     const String billmech = maRoot2Char;
-    if(billmech == ""){
+    if(billmech != ""){
       billAmountInt[0] = getValue(billmech, ',', 0).toInt();
+      billAmountInt[1] = getValue(billmech, ',', 1).toInt();
       billAmountInt[2] = getValue(billmech, ',', 2).toInt();
       billAmountInt[3] = getValue(billmech, ',', 3).toInt();
       billAmountInt[4] = getValue(billmech, ',', 4).toInt();
@@ -351,7 +453,7 @@ void setup()
     const JsonObject maRoot3 = doc[3];
     const char *maRoot3Char = maRoot3["value"];
     const String coinmech = maRoot2Char;
-    if(coinmech == ""){
+    if(coinmech != ""){
       coinAmountFloat[0] = getValue(coinmech, ',', 0).toFloat();
       coinAmountFloat[1] = getValue(coinmech, ',', 1).toFloat();
       coinAmountFloat[2] = getValue(coinmech, ',', 2).toFloat();
@@ -473,121 +575,91 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
   return 1;
 }
 
+
 void setLang(){
- if (nativeLang == false){
- lau = lauE;
- por = porE;
- res = resE;
- sta = staE;
- wak = wakE;
- ent = entE;
- ver = verE;
- buy = buyE;
- her = herE;
- ins = insE;
- exi = exiE;
- fee = feeE;
- lan = lanE;
- pre = preE;
- tap = tapE;
- tot = totE;
- sca = scaE;
- ind = indE;
+readConfig();
+if (!language.nativeLang) {
+lau = lauE;
+por = porE;
+res = resE;
+sta = staE;
+wak = wakE;
+ent = entE;
+ver = verE;
+buy = buyE;
+her = herE;
+ins = insE;
+exi = exiE;
+fee = feeE;
+lan = lanE;
+pre = preE;
+tap = tapE;
+tot = totE;
+sca = scaE;
+ind = indE;
 }
 else {
- lau = lauN;
- por = porN;
- res = resN;
- sta = staN;
- wak = wakN;
- ent = entN;
- ver = verN;
- buy = buyN;
- her = herN;
- ins = insN;
- exi = exiN;
- fee = feeN;
- lan = lanN;
- pre = preN;
- tap = tapN;
- tot = totN;
- sca = scaN;
- ind = indN;
+lau = language.lauN;
+por = language.porN;
+res = language.resN;
+sta = language.staN;
+wak = language.wakN;
+ent = language.entN;
+ver = language.verN;
+buy = language.buyN;
+her = language.herN;
+ins = language.insN;
+exi = language.exiN;
+fee = language.feeN;
+lan = language.lanN;
+pre = language.preN;
+tap = language.tapN;
+tot = language.totN;
+sca = language.scaN;
+ind = language.indN;
 }
 }
 
 void printMessage(String text1, String text2, String text3, int ftcolor, int ftcolor2, int bgcolor)
 {
-  if (screenSize){
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(4);
-  tft.setCursor(30, 40);
-  tft.println(text1);
-  tft.setCursor(30, 120);
-  tft.println(text2);
-  tft.setCursor(30, 200);
-  tft.setTextColor(ftcolor2, bgcolor);
   tft.setTextSize(2);
-  tft.println(text3);  
-  }
-  else {
-  tft.fillScreen(bgcolor);
-  tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(3);
   tft.setCursor(30, 40);
   tft.println(text1);
   tft.setCursor(30, 120);
   tft.println(text2);
   tft.setCursor(30, 200);
-  tft.setTextSize(3);
   tft.setTextColor(ftcolor2, bgcolor);
-  tft.println(text3);				 
-  }
+  tft.setTextSize(1);
+  tft.println(text3);  
 }
 
 void logo()
 {
-  if (screenSize){
   tft.fillScreen(TFT_WHITE);
-  tft.setTextSize(10);
+  tft.setTextSize(5);
   tft.setCursor(140, 50);
   tft.setTextColor(TFT_ORANGE);
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(80, 160);
-  tft.setTextSize(1);
+  tft.setTextSize(3);
   tft.println("Bitcoin ATM");
   tft.setCursor(10, 300);
   tft.setTextSize(1);
   tft.setTextColor(TFT_PURPLE);
   tft.println(ver + releaseVersion);
-  }
-  else {
-  tft.fillScreen(TFT_WHITE);
-  tft.setCursor(80, 20);
-  tft.setTextSize(6);
-  tft.setTextColor(TFT_ORANGE);
-  tft.println(logoName);
-  tft.setTextColor(TFT_BLACK);
-  tft.setCursor(30, 120);
-  tft.setTextSize(4);
-  tft.println("Bitcoin ATM");
-  tft.setCursor(10, 220);
-  tft.setTextSize(1);
-  tft.setTextColor(TFT_PURPLE);
-  tft.println(ver + releaseVersion);
-  }  
+
 }
 
 void feedmefiat()
 { 
-    if(screenSize){
       tft.setTextColor(TFT_ORANGE);
       tft.setCursor(110, 10);
-      tft.setTextSize(4);
+      tft.setTextSize(2);
       tft.println("Bitcoin ATM");
-      tft.setTextSize(8);
+      tft.setTextSize(3);
       tft.setCursor(180, 80);
       tft.println(buy);
       tft.setCursor(100, 150);
@@ -627,63 +699,8 @@ void feedmefiat()
       tft.setTextColor(TFT_GREEN);
       tft.setCursor(10, 280);
       tft.println(fee + String(charge) + "%");
-    }
-   /* BTNA.read();
-    if (BTNA.wasPressed()) {
-      nativeLang = !nativeLang;
-      setLang();
-      tft.fillScreen(TFT_BLACK);
-      langChange = false;
-    } */
 }
 
-  /*else {
-  tft.setTextColor(TFT_ORANGE);
-  tft.setCursor(80, 20);
-  tft.setTextSize(3);
-  tft.setTextColor(TFT_ORANGE);
-  tft.println("Bitcoin ATM");
-  tft.setCursor(10, 220);
-  tft.setTextSize(2);
-  tft.setTextColor(TFT_ORANGE);
-  tft.println("Insert notes/coins.");
-  tft.setTextSize(2);
-  tft.setTextColor(TFT_ORANGE);
-  tft.setCursor(10, 280);
-  tft.println("Fee:" + String(charge) + "%");
-  tft.setTextSize(10);
-  tft.setCursor(160, 80);
-  tft.println("BUY");
-  tft.setCursor(180, 140);
-  tft.println("BITCOIN");
-  tft.setCursor(160, 200);
-  tft.println("HERE");
-  delay(100);
-  tft.setTextColor(TFT_GREEN);
-  tft.setCursor(160, 80);
-  tft.println("BUY");
-  tft.setCursor(180, 140);
-  tft.println("BITCOIN");
-  tft.setCursor(160, 200);
-  tft.println("HERE!");
-  delay(100);
-  tft.setTextColor(TFT_BLUE);
-  tft.setCursor(160, 80);
-  tft.println("BUY");
-  tft.setCursor(180, 140);
-  tft.println("BITCOIN");
-  tft.setCursor(160, 200);
-  tft.println("HERE!");
-  delay(100);
-  tft.setTextColor(TFT_ORANGE);
-  tft.setCursor(160, 80);
-  tft.println("BUY");
-  tft.setCursor(180, 140);
-  tft.println("BITCOIN");
-  tft.setCursor(160, 200);
-  tft.println("HERE!");
-  delay(100);
- }*/
 void qrShowCodeLNURL(String message)
 {
   tft.fillScreen(TFT_WHITE);
@@ -709,7 +726,7 @@ void qrShowCodeLNURL(String message)
   }
 
   tft.setCursor(40, 290);
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.println(message);
   
@@ -736,7 +753,8 @@ void moneyTimerFun()
       feedmefiat();
       BTNA.read();
     if (BTNA.isPressed() && total == 0) {
-      nativeLang = !nativeLang;
+      readConfig();
+      language.nativeLang = !language.nativeLang;
       setLang();
       tft.fillScreen(TFT_BLACK);
       langChange = false;
