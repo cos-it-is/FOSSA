@@ -590,26 +590,26 @@ void setLang() {
 void printMessage(String text1, String text2, String text3, int ftcolor, int ftcolor2, int bgcolor) {
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
-  tft.setTextSize(2);
+  tft.setTextSize(3);
   tft.setCursor(30, 40);
   tft.println(text1);
   tft.setCursor(30, 120);
   tft.println(text2);
   tft.setCursor(30, 200);
   tft.setTextColor(ftcolor2, bgcolor);
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.println(text3);
 }
 
 void logo() {
   tft.fillScreen(TFT_WHITE);
-  tft.setTextSize(3);
+  tft.setTextSize(4);
   tft.setCursor(140, 50);
   tft.setTextColor(TFT_ORANGE);
   tft.println(logoName);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(80, 160);
-  tft.setTextSize(4);
+  tft.setTextSize(5);
   tft.println("Bitcoin ATM");
   tft.setCursor(10, 300);
   tft.setTextSize(2);
@@ -622,7 +622,7 @@ void feedmefiat() {
   tft.setCursor(110, 10);
   tft.setTextSize(4);
   tft.println("Bitcoin ATM");
-  tft.setTextSize(5);
+  tft.setTextSize(6);
   tft.setCursor(180, 80);
   tft.println(buy);
   tft.setCursor(100, 150);
@@ -683,7 +683,7 @@ void qrShowCodeLNURL(String message) {
   }
 
   tft.setCursor(40, 290);
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.println(message);
 
