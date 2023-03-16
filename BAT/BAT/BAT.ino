@@ -43,22 +43,26 @@ int debounce = 40;      //Set the debounce time (milliseconds) for the button, d
 #define INHIBITMECH 1  //define the GPIO connected TO the INHIBIT of the coin acceptor
 
 //GENERAL SETTINGS--
-String logoName = "The B.A.T";     //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
-String releaseVersion = "0.1";     //set the version of the release here.
-String splashJpg = "/splash.jpg";  //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
-bool online = true;
-bool stealthMode = false;
-#define SDCard 5
+String logoName = "The B.A.T";  //set your business/logo name here to display on boot. configured for < 7 characters. Any bigger, make text size smaller.
+String releaseVersion = "0.1";  //set the version of the release here.
 
-  //========================================================//
-  //========================================================//
-  //========================================================//
+//SD CARD AND IMAGE SETTINGS
+#define SDCard 5
+int imgNum = 0;
+String imgPath = "/screensaver/b/image_";
+String splashJpg = "/splash.jpg";  //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
+//unsigned long startTime;
+//========================================================//
+//========================================================//
+//========================================================//
 
 struct Configuration {
   bool online = false;
   bool nativeLang = false;
   bool dualLang = false;
   bool stealthMode = false;
+  bool screenSaver = true;
+  String lannN = "";
   String lauN = "";
   String porN = "";
   String resN = "";
@@ -78,6 +82,8 @@ struct Configuration {
   String totN = "";
   String scaN = "";
   String indN = "";
+  int screenTimeout;
+  int numImages;
   uint32_t colour1 = 0xffffff;
   uint32_t colour2 = 0xffffff;
   uint32_t colour3 = 0xffffff;
@@ -124,30 +130,61 @@ bool readConfig() {
       if (smValue == "true") {
         cfg.stealthMode = true;
       }
+    } else if (line.startsWith("ScreenSaver")) {
+      int endIndex = line.indexOf(";");
+      String ssValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
+      if (ssValue == "true") {
+        cfg.screenSaver = true;
+      }
+    } else if (line.startsWith("Screensaver_Timeout")) {
+      int endIndex = line.indexOf(";");
+      String timeoutValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
+      int timeout = timeoutValue.toInt();
+      cfg.screenTimeout = timeout;
+    } else if (line.startsWith("Screensaver_Images")) {
+      int endIndex = line.indexOf(";");
+      String imagesValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
+      int images = imagesValue.toInt();
+      cfg.numImages = images;
     } else if (line.startsWith("Colour1")) {
       int endIndex = line.indexOf(";");
       String colourValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.colour1 = (uint32_t)strtol(colourValue.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.colour1 = (uint32_t)strtol(colourValue.c_str(), NULL, 16);
+      }
     } else if (line.startsWith("Colour2")) {
       int endIndex = line.indexOf(";");
       String colourValue2 = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.colour2 = (uint32_t)strtol(colourValue2.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.colour2 = (uint32_t)strtol(colourValue2.c_str(), NULL, 16);
+      }
     } else if (line.startsWith("Colour3")) {
       int endIndex = line.indexOf(";");
       String colourValue3 = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.colour3 = (uint32_t)strtol(colourValue3.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.colour3 = (uint32_t)strtol(colourValue3.c_str(), NULL, 16);
+      }
     } else if (line.startsWith("Colour4")) {
       int endIndex = line.indexOf(";");
       String colourValue4 = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.colour4 = (uint32_t)strtol(colourValue4.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.colour4 = (uint32_t)strtol(colourValue4.c_str(), NULL, 16);
+      }
     } else if (line.startsWith("Colour5")) {
       int endIndex = line.indexOf(";");
       String colourValue5 = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.colour5 = (uint32_t)strtol(colourValue5.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.colour5 = (uint32_t)strtol(colourValue5.c_str(), NULL, 16);
+      }
     } else if (line.startsWith("Background")) {
       int endIndex = line.indexOf(";");
       String bgValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
-      cfg.background = (uint32_t)strtol(bgValue.c_str(), NULL, 16);
+      if (!cfg.stealthMode) {
+        cfg.background = (uint32_t)strtol(bgValue.c_str(), NULL, 16);
+      }
+    } else if (line.startsWith("Language_Name")) {
+      int endIndex = line.indexOf(";");
+      cfg.lannN = line.substring(line.lastIndexOf("=") + 2, endIndex);
     } else if (line.startsWith("Launch_Portal")) {
       int endIndex = line.indexOf(";");
       cfg.lauN = line.substring(line.lastIndexOf("=") + 2, endIndex);
@@ -211,26 +248,28 @@ bool readConfig() {
   return true;
 }
 
+String lannE = "English";
 String lauE = "Launch portal";
 String porE = "Portal launched.";
 String resE = "Restart/launch portal!";
 String staE = "Starting Acceptor(s)";
 String wakE = "Waking up.";
 String entE = "entered.";
-String verE = "Version: ";
+String verE = "Version:";
 String buyE = "BUY";
 String bitE = "BITCOIN";
 String herE = "HERE";
 String insE = "Insert notes/coins.";
-String exiE = "WHEN FINISHED.";
+String exiE = "When finished.";
 String feeE = "Fee:";
-String lanE = "change config.";
-String preE = "PRESS BUTTON ";
-String tapE = "TAP SCREEN ";
+String lanE = "change language.";
+String preE = "Press button";
+String tapE = "Tap screen";
 String totE = "Total: ";
-String scaE = "SCAN ME TO RECEIVE SATS. ";
+String scaE = "Scan me to receive sats.";
 String indE = "INSERTED";
 
+String lann;
 String lau;
 String por;
 String res;
@@ -437,9 +476,9 @@ void setup() {
   tft.invertDisplay(false);
   tft.fillScreen(cfg.background);
   TJpgDec.drawSdJpg(0, 0, splashJpg);
-  delay(4000);
+  delay(3000);
   logo();
-
+  delay(2000);
   int timer = 0;
   while (timer < 2000) {
     BTNA.read();
@@ -590,6 +629,23 @@ void loop() {
   qrShowCodeLNURL(sca + pre + exi);
 }
 
+void screenSaver() {
+  while (true) {
+    for (int i = 0; i <= cfg.numImages; i++) {
+      String imagePath = imgPath + i + ".jpg";
+      TJpgDec.drawSdJpg(0, 0, imagePath);
+      // check for button press to exit screensaver
+      BTNA.read();
+      if (BTNA.isPressed()) {
+        tft.fillScreen(cfg.background);
+        return;
+        SerialPort1.write(184); //turn mechs on
+        digitalWrite(INHIBITMECH, HIGH);
+      }
+    }
+  }
+}
+
 bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap) {
   // Stop further decoding as image is running off bottom of screen
   if (y >= tft.height()) return 0;
@@ -601,9 +657,9 @@ bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap) {
   return 1;
 }
 
-
 void setLang() {
   if (!cfg.nativeLang) {
+    lann = lannE;
     lau = lauE;
     por = porE;
     res = resE;
@@ -625,6 +681,7 @@ void setLang() {
     ind = indE;
   } else {
     readConfig();
+    lann = cfg.lannN;
     lau = cfg.lauN;
     por = cfg.porN;
     res = cfg.resN;
@@ -646,7 +703,6 @@ void setLang() {
     ind = cfg.indN;
   }
 }
-
 
 void printText(const char *text, uint8_t textSize = 1, uint32_t textColor = TFT_WHITE, int16_t x = -1, int16_t y = -1) {
   String textString = String(text);
@@ -672,9 +728,6 @@ void printText(const char *text, uint8_t textSize = 1, uint32_t textColor = TFT_
   tft.print(textString);
 }
 
-
-
-
 void printMessage(String text1, String text2, String text3, int ftcolor, int ftcolor2, int bgcolor) {
   tft.fillScreen(bgcolor);
   tft.setTextColor(ftcolor, bgcolor);
@@ -690,30 +743,38 @@ void printMessage(String text1, String text2, String text3, int ftcolor, int ftc
 }
 
 void logo() {
-  tft.fillScreen(cfg.background);
-  printText("Bitcoin ATM", 4, cfg.colour5, -1, 20);
-  printText(logoName.c_str(), 7, cfg.colour4, -1, 115);
+  tft.fillScreen(TFT_WHITE);
+  printText("Bitcoin Lightning ATM", 3, TFT_BLACK, -1, 20);
+  printText(logoName.c_str(), 7, TFT_ORANGE, -1, 130);
   String versionRelease = String(ver.c_str()) + String(releaseVersion.c_str());
-  printText(versionRelease.c_str(), 2, cfg.colour4, 10, 300);
+  printText(versionRelease.c_str(), 2, TFT_BLACK, 10, 300);
 }
 
 void feedmefiat() {
-  printText(buy.c_str(), 7, cfg.colour1, -1, 20);
-  printText(bit.c_str(), 7, cfg.colour1, -1, 115);
-  printText(her.c_str(), 7, cfg.colour1, -1, 220);
+  if (cfg.stealthMode = true) {
+    printText(buy.c_str(), 6, cfg.colour1, -1, 20);
+    printText(bit.c_str(), 6, cfg.colour1, -1, 110);
+    printText(her.c_str(), 6, cfg.colour1, -1, 200);
+    printText((fee + String(charge) + "%").c_str(), 2, cfg.colour4, 10, 20);
+    printText((preE + ": " + lannE + "/" + cfg.lannN).c_str(), 2, cfg.colour5, 10, 280);
+    printText(ins.c_str(), 2, cfg.colour4, 10, 300);
+  } else
+    printText(buy.c_str(), 6, cfg.colour1, -1, 20);
+  printText(bit.c_str(), 6, cfg.colour1, -1, 110);
+  printText(her.c_str(), 6, cfg.colour1, -1, 200);
   delay(100);
-  printText(buy.c_str(), 7, cfg.colour2, -1, 20);
-  printText(bit.c_str(), 7, cfg.colour2, -1, 115);
-  printText(her.c_str(), 7, cfg.colour2, -1, 220);
+  printText(buy.c_str(), 6, cfg.colour2, -1, 20);
+  printText(bit.c_str(), 6, cfg.colour2, -1, 110);
+  printText(her.c_str(), 6, cfg.colour2, -1, 200);
   delay(100);
-  printText(buy.c_str(), 7, cfg.colour3, -1, 20);
-  printText(bit.c_str(), 7, cfg.colour3, -1, 115);
-  printText(her.c_str(), 7, cfg.colour3, -1, 220);
+  printText(buy.c_str(), 6, cfg.colour3, -1, 20);
+  printText(bit.c_str(), 6, cfg.colour3, -1, 110);
+  printText(her.c_str(), 6, cfg.colour3, -1, 200);
   delay(100);
-  printText(ins.c_str(), 2, cfg.colour5, 10, 300);
-  printText((fee + String(charge) + "%").c_str(), 2, cfg.colour4, 10, 280);
+  printText((fee + String(charge) + "%").c_str(), 2, cfg.colour4, 10, 20);
+  printText((preE + ": " + lannE + "/" + cfg.lannN).c_str(), 2, cfg.colour5, 10, 280);
+  printText(ins.c_str(), 2, cfg.colour4, 10, 300);
 }
-
 
 void qrShowCodeLNURL(String message) {
   tft.fillScreen(TFT_WHITE);
@@ -754,6 +815,7 @@ void moneyTimerFun() {
   bills = 0;
   total = 0;
 
+  unsigned long startTime = millis();  // store the start time
   while (waitForTap || total == 0) {
     if (total == 0) {
       feedmefiat();
@@ -788,6 +850,15 @@ void moneyTimerFun() {
     BTNA.read();
     if (BTNA.wasReleased() && (total > 0 || total == maxamount)) {
       waitForTap = false;
+    }
+
+    // check if the screensaver timeout has been reached
+    if (cfg.screenSaver && (millis() - startTime > cfg.screenTimeout * 1000)) {
+      waitForTap = true;  // reset the flag to wait for a tap
+      SerialPort1.write(185);
+      digitalWrite(INHIBITMECH, LOW);
+      screenSaver();         // show the screensaver
+      startTime = millis();  // restart the timer
     }
   }
 
