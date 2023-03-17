@@ -19,7 +19,7 @@ fs::SPIFFSFS &FlashFS = SPIFFS;
 #include "Bitcoin.h"
 #include "SPI.h"
 //#include <Free_Fonts.h>
-//#include <MontserratAlternates_SemiBold8pt7b.h>
+//#include <PressStart2P_Regular8pt.h>
 //========================================================//
 //============EDIT IF USING DIFFERENT HARDWARE============//
 //========================================================//
@@ -48,10 +48,8 @@ String releaseVersion = "0.1";  //set the version of the release here.
 
 //SD CARD AND IMAGE SETTINGS
 #define SDCard 5
-int imgNum = 0;
-String imgPath = "/screensaver/b/image_";
 String splashJpg = "/splash.jpg";  //set the image name of the .jpg file located on your SD card. This needs to be correct size of screen and rotated correctly before saving to SD card.
-//unsigned long startTime;
+
 //========================================================//
 //========================================================//
 //========================================================//
@@ -84,6 +82,7 @@ struct Configuration {
   String indN = "";
   int screenTimeout;
   int numImages;
+  int memeChoice;
   uint32_t colour1 = 0xffffff;
   uint32_t colour2 = 0xffffff;
   uint32_t colour3 = 0xffffff;
@@ -94,6 +93,9 @@ struct Configuration {
 
 
 Configuration cfg;
+
+
+
 bool readConfig() {
   // Open the config.txt file
   File configFile = SD.open("/config.ini");
@@ -130,18 +132,23 @@ bool readConfig() {
       if (smValue == "true") {
         cfg.stealthMode = true;
       }
-    } else if (line.startsWith("ScreenSaver")) {
+    } else if (line.startsWith("ScreenMeme")) {
       int endIndex = line.indexOf(";");
       String ssValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
       if (ssValue == "true") {
         cfg.screenSaver = true;
       }
-    } else if (line.startsWith("Screensaver_Timeout")) {
+    } else if (line.startsWith("Screenmeme_Timeout")) {
       int endIndex = line.indexOf(";");
       String timeoutValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
       int timeout = timeoutValue.toInt();
       cfg.screenTimeout = timeout;
-    } else if (line.startsWith("Screensaver_Images")) {
+    } else if (line.startsWith("Meme_Choice")) {
+      int endIndex = line.indexOf(";");
+      String choiceValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
+      int mChoice = choiceValue.toInt();
+      cfg.memeChoice = mChoice;
+    } else if (line.startsWith("Number_Meme_Images")) {
       int endIndex = line.indexOf(";");
       String imagesValue = line.substring(line.lastIndexOf("=") + 2, endIndex);
       int images = imagesValue.toInt();
@@ -465,9 +472,9 @@ void setup() {
   }
   tft.setSwapBytes(true);
   TJpgDec.setJpgScale(1);
-  TJpgDec.setCallback(printLogo);
+  TJpgDec.setCallback(drawImage);
   tft.setTextSize(1);
-  //tft.setFreeFont(&MontserratAlternates_SemiBold8pt7b);
+  //tft.setFreeFont(&PressStart2P_Regular8pt);
   BTNA.begin();
   readConfig();
   setLang();
@@ -630,6 +637,7 @@ void loop() {
 }
 
 void screenSaver() {
+  String imgPath = "/screenmeme/b/" + String(cfg.memeChoice) + "/image_";
   while (true) {
     for (int i = 0; i <= cfg.numImages; i++) {
       String imagePath = imgPath + i + ".jpg";
@@ -639,14 +647,14 @@ void screenSaver() {
       if (BTNA.isPressed()) {
         tft.fillScreen(cfg.background);
         return;
-        SerialPort1.write(184); //turn mechs on
+        SerialPort1.write(184);  //turn mechs on
         digitalWrite(INHIBITMECH, HIGH);
       }
     }
   }
 }
 
-bool printLogo(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap) {
+bool drawImage(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap) {
   // Stop further decoding as image is running off bottom of screen
   if (y >= tft.height()) return 0;
 
